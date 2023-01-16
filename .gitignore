@@ -162,3 +162,5 @@ cython_debug/
 # 本项目自定义部分
 # 输出结果存放文件目录固定位置
 output_dir/
+# 数据不传git
+data/
