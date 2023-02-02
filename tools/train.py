@@ -199,12 +199,11 @@ def save_checkpoint(state, file_prefix):
 
 
 def train(conf):
-    # logger = util.Logger(conf)
     if not os.path.exists(conf.checkpoint_dir):
         os.makedirs(conf.checkpoint_dir)
-
+    with open(os.path.join(conf.output_dir, "config.py"), 'w') as fp:
+        fp.write(conf.pretty_text)
     logger = util.Logger(conf)
-    shutil.copy(sys.argv[1], config.output_dir)
 
     model_name = conf.model_name
     dataset_name = "ClassificationDataset"
