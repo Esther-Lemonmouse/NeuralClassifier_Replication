@@ -198,10 +198,15 @@ def save_checkpoint(state, file_prefix):
     torch.save(state, file_name)
 
 
+def save_best_checkpoint(state, file_prefix):
+    file_name = file_prefix + "_best"
+    torch.save(state, file_name)
+
+
 def train(conf):
     if not os.path.exists(conf.checkpoint_dir):
         os.makedirs(conf.checkpoint_dir)
-    with open(os.path.join(conf.output_dir, "config.py"), 'w') as fp:
+    with open(os.path.join(conf.output_dir, "config.py"), 'w', encoding='utf-8') as fp:
         fp.write(conf.pretty_text)
     logger = util.Logger(conf)
 
@@ -234,23 +239,37 @@ def train(conf):
         if performance > best_performance:  # record the best model
             best_epoch = epoch
             best_performance = performance
-        save_checkpoint({
-            'epoch': epoch,
-            'model_name': model_name,
-            'state_dict': model.state_dict(),
-            'best_performance': best_performance,
-            'optimizer': optimizer.state_dict(),
-            }, model_file_prefix)
+            # 更改代码：仅保存最佳权重
+            save_best_checkpoint({
+                'epoch': epoch,
+                'model_name': model_name,
+                'state_dict': model.state_dict(),
+                'best_performance': best_performance,
+                'optimizer': optimizer.state_dict(),
+                }, model_file_prefix)
+        # 原始代码，每个epoch保存一次权重 ###################################
+        # save_checkpoint({
+        #     'epoch': epoch,
+        #     'model_name': model_name,
+        #     'state_dict': model.state_dict(),
+        #     'best_performance': best_performance,
+        #     'optimizer': optimizer.state_dict(),
+        #     }, model_file_prefix)
+        #################################################################
         time_used = time.time() - start_time
         logger.info("Epoch %d cost time: %d second" % (epoch, time_used))
 
-    # best model on validateion set
-    best_epoch_file_name = model_file_prefix + "_" + str(best_epoch)
-    best_file_name = model_file_prefix + "_best"
-    shutil.copyfile(best_epoch_file_name, best_file_name)
+    # 由于设置为仅存储最佳模型，因此无需再次拷贝最佳模型。原始代码如下
+    #####################################################################
+    # # best model on validateion set
+    # best_epoch_file_name = model_file_prefix + "_" + str(best_epoch)
+    # best_file_name = model_file_prefix + "_best"
+    # shutil.copyfile(best_epoch_file_name, best_file_name)
+    #####################################################################
 
-    load_checkpoint(model_file_prefix + "_" + str(best_epoch), conf, model,
-                    optimizer)
+    load_checkpoint(model_file_prefix + "_best", conf, model, optimizer)    # 修改代码: 加载唯一的best权重
+    # 原始代码:加载最佳表现的对应epoch权重####################################
+    # load_checkpoint(model_file_prefix + "_" + str(best_epoch), conf, model, optimizer)
     trainer.eval(test_data_loader, model, optimizer, "Best test", best_epoch)
 
 
